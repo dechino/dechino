@@ -1,0 +1,10 @@
+{
+  "name": "angularjs",
+  "main": "server.js",
+  "dependencies": {
+    "express": "*",
+    "morgan": "*",
+    "body-parser": "*",
+    "method-override": "*"
+  }
+}

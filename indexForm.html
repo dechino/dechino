@@ -1,0 +1,158 @@
+
+<html>
+<head><title>Notes App</title>
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+</head>
+<body>
+<h1> Contatti</h1>
+ <div ng-app="app" ng-controller="ContactController">
+    <form class="well">
+        <label>Name</label>
+        <input type="text" name="name" ng-model="newcontact.name" />
+        <label>Email</label>
+        <input type="text" name="email" ng-model="newcontact.email" />
+        <label>Phone</label>
+        <input type="text" name="phone" ng-model="newcontact.phone" />
+        <br/>
+        <input type="hidden" ng-model="newcontact.id" />
+        <input type="button" value="Save" ng-click="saveContact()" class="btn btn-primary" />
+
+    </form>
+    <input type="button" value="Load" ng-click="loadContact()" class="btn btn-primary" />
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr> <th>Id</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="contact in contacts">
+              <td>{{ contact.id }}</td>
+                <td>{{ contact.name }}</td>
+                <td>{{ contact.email }}</td>
+                <td>{{ contact.phone }}</td>
+                <td> <a href="javascript:void(0)" ng-click="edit(contact.id)">edit</a> | <a href="javascript:void(0)" ng-click="delete(contact.id)">delete</a>
+
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<script
+  src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.js">
+</script>
+<script type="text/javascript">
+var module = angular.module('app', []);
+ 
+module.service('ContactService', function ($http,$q) {
+    //to create unique contact id
+    var uid = 1;
+     
+    //contacts array to hold list of all contacts
+    var contacts =  [];
+
+    var deferred = $q.defer();
+
+    this.carica = function() {
+         $http.get('http://localhost:8000/api/contact').then(function (resp) {
+               deferred.resolve(resp); 
+             });  
+         return deferred.promise;
+      };
+   this.save = function (contact) {
+        if (contact.id == null) {
+            contact.id = uid++;
+            contacts.push(contact);
+            $http.post('/api/contact', contact)
+            .then(function (resp) {
+                alert("Valore Salvato correttamente")
+               });  
+        } else {
+            for (i in contacts) {
+                if (contacts[i].id == contact.id) {
+                    contacts[i] = contact;
+                }
+            }
+        }
+    }
+   this.get = function (id) {
+        for (i in contacts) {
+            if (contacts[i].id == id) {
+                return contacts[i];
+            }
+        }
+ 
+    }
+ 
+     this.delete = function (id) {
+        var appo=[];
+        for (var i=0;i<contacts.length;i++) {
+            if (contacts[i].id == id) {
+                var indice= i;
+                $http.delete('/api/contacts/'+id)
+                .then(function (resp) {
+                    contacts.splice(indice, 1);
+                    alert("Valore eliminato correttamente");
+                   }); 
+           
+            }
+        }
+    }
+ 
+    //simply returns the contacts list
+    this.setlist = function (list) {
+        contacts=list;
+   }
+
+//simply returns the contacts list
+    this.getlist = function (list) {
+        return contacts;
+    }
+});
+ 
+module.controller('ContactController', function ($scope,ContactService) {
+ 
+
+     //ContactService.carica(ContactService.setlist);
+  
+     $scope.loadContact = function () {
+        ContactService.carica()
+             .then(
+                   function(list){
+                    $scope.contacts=list.data
+                });
+    }
+
+
+ angular.element(document).ready(function () {
+        ContactService.carica()
+             .then(
+                   function(list){
+                    $scope.contacts=list.data
+                });
+    });
+
+
+    $scope.saveContact = function () {
+        ContactService.save($scope.newcontact);
+        $scope.newcontact = {};
+    }
+ 
+ 
+    $scope.delete = function (id) {
+        alert("Sto eliminando l'id "+id )
+        ContactService.delete(id);
+     }
+ 
+ 
+    $scope.edit = function (id) {
+        $scope.newcontact = angular.copy(ContactService.get(id));
+    }
+})
+</script>
+</body>
+</html>
