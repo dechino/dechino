@@ -58,7 +58,7 @@ module.service('ContactService', function ($http,$q) {
     var deferred = $q.defer();
 
     this.carica = function() {
-         $http.get('http://localhost:8000/api/contact').then(function (resp) {
+         $http.get('/api/contact').then(function (resp) {
                deferred.resolve(resp); 
              });  
          return deferred.promise;
